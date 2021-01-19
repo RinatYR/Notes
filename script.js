@@ -2,12 +2,11 @@ const notes = localStorage.getItem('notes') ? JSON.parse(localStorage.getItem('n
 let addButtonClose = false;
 let timeOut = 0;
 
-const editorTitle = document.querySelector('.editor__title');
-const editorContent = document.querySelector('.editor__content');
+const editorTitle = $('.editor__title');
+const editorContent = $('.editor__content');
 
 function render(){
-    const noteList = document.querySelector('.note-list');
-    noteList.innerHTML = notes.map(function(note, id){
+    const noteList = notes.map(function(note, id){
         return `
         <li class="note">
             <h2 class="note__title" onclick="editNote(${id})">${note.title}</h2>
@@ -16,10 +15,12 @@ function render(){
         </li>
         `
     }).join('');
+    $('.note-list').html(noteList);
 }
+
 function editNote(idx){
-    editorTitle.textContent = notes[idx].title;
-    editorContent.textContent = notes[idx].text;
+    editorTitle.text(notes[idx].title);
+    editorContent.text(notes[idx].text);
     openCloseEditor();
     if(addButtonClose){addEventToInputs(idx)};
 }
@@ -30,49 +31,47 @@ function removeNote(idx){
 }
 
 function addEventToInputs(idx){
-    editorTitle.dataset.idx = idx;
-    editorContent.dataset.idx = idx;
-    console.log(idx)
+    editorTitle.data('idx', idx);
+    editorContent.data('idx', idx);
     //убираем старые слушатели
-    editorTitle.removeEventListener('input', realTimeSaveNote);
-    editorContent.removeEventListener('input', realTimeSaveNote);
+    editorTitle.off('input');
+    editorContent.off('input');
     //добавляем новые слушатели
-    editorTitle.addEventListener('input', realTimeSaveNote)
-    editorContent.addEventListener('input', realTimeSaveNote)
+    editorTitle.on('input', realTimeSaveNote);
+    editorContent.on('input', realTimeSaveNote);
 }
 
-function realTimeSaveNote(event){
-    const index = event.target.dataset.idx;
+function realTimeSaveNote(){
+    const index = $(this).data('idx');
     clearTimeout(timeOut);
     timeOut = setTimeout(function(){
         console.log(notes)
-        notes[index].title = editorTitle.textContent;
-        notes[index].text = editorContent.textContent;
+        notes[index].title = editorTitle.text();
+        notes[index].text = editorContent.text();
         localStorage.setItem('notes', JSON.stringify(notes));
         render();
     }, 500);
 }
 
 function openCloseEditor(){
-    const editor = document.querySelector('.editor');
-    editor.classList.toggle('editor__show');
-    document.querySelector('.add').classList.toggle('add_close');
+    $('.editor').toggleClass('editor__show');
+    $('.add').toggleClass('add_close');
     addButtonClose = !addButtonClose;
 }
 
 render();
 
-document.querySelector('.add').onclick = () => {
+$('.add').click(() => {
     openCloseEditor();
     if(addButtonClose){
-        editorTitle.textContent = '';
-        editorContent.textContent = '';
+        editorTitle.text('');
+        editorContent.text('');
         notes.push({
             title: '', 
             text: ''
         });
         addEventToInputs(notes.length - 1);
     }
-}
+});
 
 
